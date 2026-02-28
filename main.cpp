@@ -26,23 +26,6 @@ float pedestalAngleCenterY = 0.0f;
 
 int task;
 
-std::vector<GLfloat> vertices_test = {
-    // x,     y,    z      r,   g,   b
-    -0.95f,  0.9f,  0.0f,  1.0f, 0.0f, 0.0f,
-    -0.9f,  -0.5f,  0.0f,  0.0f, 1.0f, 0.0f,
-    -0.2f,  -0.2f,  0.0f,  0.5f, 0.0f, 1.0f,
-    -0.3f,   0.5f,  0.0f,  0.2f, 0.7f, 1.0f,
-	 0.1f,   0.95f, 0.0f,  1.0f, 1.0f, 0.0f,
-	 0.2f,  -0.85f, 0.0f,  1.0f, 0.0f, 1.0f,
-	 0.6f,  -0.3f,  0.0f,  0.0f, 1.0f, 1.0f,
-	 0.7f,   0.4f,  0.0f,  0.5f, 0.5f, 0.5f,
-	 0.9f,   0.1f,  0.0f,  0.3f, 0.3f, 0.3f
-};
-
-std::vector<GLuint> indices_test = {
-    0, 1, 2, 3, 4, 5, 6, 7, 8
-};
-
 // Вершины: coord (x,y,z) + color (r,g,b)
 std::vector<GLfloat> vertices_square = {
     // x,     y,    z      r,   g,   b
@@ -54,18 +37,6 @@ std::vector<GLfloat> vertices_square = {
 
 std::vector<GLuint> indices_square = {
     0, 1, 2, 3
-};
-
-// Вершины: coord (x,y,z) + color (r,g,b)
-std::vector<GLfloat> vertices_triangle = {
-    // x,     y,    z      r,   g,   b
-    -0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f, // нижняя левая
-     0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f, // нижняя правая
-     0.0f,  0.5f, 0.0f,  0.0f, 1.0f, 0.0f, // верхняя
-};
-
-std::vector<GLuint> indices_triangle = {
-    0, 1, 2
 };
 
 std::vector<GLfloat> vertices_pentagon = {
@@ -232,14 +203,10 @@ const char* FS = R"(
 in vec3 vColor;
 out vec4 color;
 
-uniform bool useUniformColor = false;
 uniform vec3 uColor;
 
 void main() {
-    if (useUniformColor)
-        color = vec4(uColor, 1.0);
-    else
-        color = vec4(vColor, 1.0);
+    color = vec4(vColor, 1.0);
 }
 )";
 
@@ -317,36 +284,6 @@ void InitShaders()
 	InitShaderStripes();
 }
 
-void InitTest()
-{
-    glGenVertexArrays(1, &VAO_test);
-    glBindVertexArray(VAO_test);
-
-    glGenBuffers(1, &VBO_test);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO_test);
-    glBufferData(GL_ARRAY_BUFFER,
-        vertices_test.size() * sizeof(GLfloat),
-        vertices_test.data(), GL_STATIC_DRAW);
-
-    glGenBuffers(1, &EBO_test);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_test);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-        indices_test.size() * sizeof(GLuint),
-        indices_test.data(), GL_STATIC_DRAW);
-
-    // coord
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
-        6 * sizeof(GLfloat), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    // color
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE,
-        6 * sizeof(GLfloat), (void*)(3 * sizeof(GLfloat)));
-    glEnableVertexAttribArray(1);
-
-    glBindVertexArray(0);
-}
-
 void InitSquare()
 {
     glGenVertexArrays(1, &VAO_square);
@@ -363,36 +300,6 @@ void InitSquare()
     glBufferData(GL_ELEMENT_ARRAY_BUFFER,
         indices_square.size() * sizeof(GLuint),
         indices_square.data(), GL_STATIC_DRAW);
-
-    // coord
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
-        6 * sizeof(GLfloat), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    // color
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE,
-        6 * sizeof(GLfloat), (void*)(3 * sizeof(GLfloat)));
-    glEnableVertexAttribArray(1);
-
-    glBindVertexArray(0);
-}
-
-void InitTriangle()
-{
-	glGenVertexArrays(1, &VAO_triangle);
-	glBindVertexArray(VAO_triangle);
-
-	glGenBuffers(1, &VBO_triangle);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_triangle);
-    glBufferData(GL_ARRAY_BUFFER,
-        vertices_triangle.size() * sizeof(GLfloat),
-		vertices_triangle.data(), GL_STATIC_DRAW);
-
-	glGenBuffers(1, &EBO_triangle);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_triangle);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-		indices_triangle.size() * sizeof(GLuint),
-		indices_triangle.data(), GL_STATIC_DRAW);
 
     // coord
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
@@ -468,189 +375,24 @@ void InitCube() {
 
 void InitBuffers()
 {
-    InitTest();
 	InitSquare();
-	InitTriangle();
 	InitPentagon();
     InitCube();
 }
 
 void Draw()
 {
-    if (task != 3)
+    if (task == 1)
     {
-        GLint useColorLoc = glGetUniformLocation(Program, "useUniformColor");
-        glUniform1i(useColorLoc, 0);
-    }
-    if (task == 0)
-    {
-        CreateTransformMatrix(0, 0, 0);
-        modelLoc = glGetUniformLocation(Program, "model");
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, transformMatrix);
 
-        glViewport(0, 600, 200, 200);
-        glUseProgram(Program);
-        glBindVertexArray(VAO_test);
-        glDrawElements(GL_POINTS, indices_test.size(), GL_UNSIGNED_INT, 0);
-
-        glViewport(200, 600, 200, 200);
-        glUseProgram(Program);
-        glBindVertexArray(VAO_test);
-        glDrawElements(GL_LINES, indices_test.size(), GL_UNSIGNED_INT, 0);
-
-        glViewport(400, 600, 200, 200);
-        glUseProgram(Program);
-        glBindVertexArray(VAO_test);
-        glDrawElements(GL_LINE_STRIP, indices_test.size(), GL_UNSIGNED_INT, 0);
-
-        glViewport(600, 600, 200, 200);
-        glUseProgram(Program);
-        glBindVertexArray(VAO_test);
-        glDrawElements(GL_LINE_LOOP, indices_test.size(), GL_UNSIGNED_INT, 0);
-
-        glViewport(800, 600, 200, 200);
-        glUseProgram(Program);
-        glBindVertexArray(VAO_test);
-        glDrawElements(GL_POLYGON, indices_test.size(), GL_UNSIGNED_INT, 0);
-
-        glViewport(1000, 600, 200, 200);
-        glUseProgram(Program);
-        glBindVertexArray(VAO_test);
-        glDrawElements(GL_QUADS, indices_test.size(), GL_UNSIGNED_INT, 0);
-
-        glViewport(1200, 600, 200, 200);
-        glUseProgram(Program);
-        glBindVertexArray(VAO_test);
-        glDrawElements(GL_QUAD_STRIP, indices_test.size(), GL_UNSIGNED_INT, 0);
-
-        glViewport(1400, 600, 200, 200);
-        glUseProgram(Program);
-        glBindVertexArray(VAO_test);
-        glDrawElements(GL_TRIANGLES, indices_test.size(), GL_UNSIGNED_INT, 0);
-
-        glViewport(0, 400, 200, 200);
-        glUseProgram(Program);
-        glBindVertexArray(VAO_test);
-        glDrawElements(GL_TRIANGLE_STRIP, indices_test.size(), GL_UNSIGNED_INT, 0);
-
-        glViewport(200, 400, 200, 200);
-        glUseProgram(Program);
-        glBindVertexArray(VAO_test);
-        glDrawElements(GL_TRIANGLE_FAN, indices_test.size(), GL_UNSIGNED_INT, 0);
-    }
-    else if (task == 1)
-    {
-        CreateTransformMatrix(0, 0, 0);
-
-        modelLoc = glGetUniformLocation(Program, "model");
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, transformMatrix);
-
-        // Левая половина экрана (квадрат)
-        glViewport(0, 0, 800, 800);
-        glUseProgram(Program);
-        glBindVertexArray(VAO_square);
-        glDrawElements(GL_QUADS, indices_square.size(), GL_UNSIGNED_INT, 0);
-
-        // Правая половина экрана (треугольник)
-        glViewport(800, 0, 800, 800);
-        glUseProgram(Program);
-        glBindVertexArray(VAO_triangle);
-        glDrawElements(GL_TRIANGLES, indices_triangle.size(), GL_UNSIGNED_INT, 0);
     }
     else if (task == 2)
     {
-        CreateTransformMatrix(0, 0, 0);
-
-        modelLoc = glGetUniformLocation(Program, "model");
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, transformMatrix);
-
-        glViewport(400, 0, 800, 800);
-        glUseProgram(Program);
-        glBindVertexArray(VAO_pentagon);
-        glDrawElements(GL_TRIANGLE_FAN, indices_pentagon.size(), GL_UNSIGNED_INT, 0);
-    }
-    else if (task == 2)
-    {
-        CreateTransformMatrix(0, 0, 0);
-
-        modelLoc = glGetUniformLocation(Program, "model");
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, transformMatrix);
-
-        glViewport(400, 0, 800, 800);
-        glUseProgram(Program);
-        glBindVertexArray(VAO_pentagon);
-        glDrawElements(GL_TRIANGLE_FAN, indices_pentagon.size(), GL_UNSIGNED_INT, 0);
-    }
-    else if (task == 21)
-    {
-        CreateTransformMatrix(0.5f, 0.5f, 0);
-
-        modelLoc = glGetUniformLocation(Program, "model");
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, transformMatrix);
-
-        glViewport(400, 0, 800, 800);
-        glUseProgram(Program);
-        glBindVertexArray(VAO_cube);
-        glDrawElements(GL_QUADS, indices_cube.size(), GL_UNSIGNED_INT, 0);
-    }
-    else if (task == 22)
-    {
-        glViewport(400, 0, 800, 800);
-        glUseProgram(ProgramStripes);
-        glBindVertexArray(VAO_square);
-        glDrawElements(GL_QUADS, indices_square.size(), GL_UNSIGNED_INT, 0);
+        
     }
     else if (task == 3)
     {
-        glViewport(0, 0, 800, 800);
-        glUseProgram(Program);
-        glBindVertexArray(VAO_cube);
 
-        GLint useColorLoc = glGetUniformLocation(Program, "useUniformColor");
-        GLint colorLoc = glGetUniformLocation(Program, "uColor");
-        GLint modelLoc = glGetUniformLocation(Program, "model");
-
-        glUniform1i(useColorLoc, 1);
-
-        // Нижний золотой кубик (чуть темнее)
-        CreateTransformMatrix(0.0f, pedestalAngleCubeY, 0.0f, 0.3f, -0.45f, -0.1f);
-        CreatePivotRotationY(pedestalAngleCenterY, 0.45f, 0.0f, 0.0f, pivotRot1);
-        CreatePivotRotationY(pedestalAngleY, 0.0f, 0.0f, 0.0f, pivotRot2);
-        Mul(pivotRot1, transformMatrix, tmp);
-        Mul(pivotRot2, tmp, finalMat);
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, finalMat);
-        glUniform3f(colorLoc, 0.7f, 0.6f, 0.1f);
-        glDrawElements(GL_QUADS, indices_cube.size(), GL_UNSIGNED_INT, 0);
-
-        // Верхний золотой кубик
-        CreateTransformMatrix(0.0f, pedestalAngleCubeY, 0.0f, 0.3f, -0.45f, 0.2f);
-        CreatePivotRotationY(pedestalAngleCenterY, 0.45f, 0.0f, 0.0f, pivotRot1);
-        CreatePivotRotationY(pedestalAngleY, 0.0f, 0.0f, 0.0f, pivotRot2);
-        Mul(pivotRot1, transformMatrix, tmp);
-        Mul(pivotRot2, tmp, finalMat);
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, finalMat);
-        glUniform3f(colorLoc, 1.0f, 0.84f, 0.0f);
-        glDrawElements(GL_QUADS, indices_cube.size(), GL_UNSIGNED_INT, 0);
-
-        // Серебряный кубик слева
-        CreateTransformMatrix(0.0f, pedestalAngleCubeY, 0.0f, 0.3f, -0.75f, -0.1f);
-        CreatePivotRotationY(pedestalAngleCenterY, 0.45f, 0.0f, 0.0f, pivotRot1);
-        CreatePivotRotationY(pedestalAngleY, 0.0f, 0.0f, 0.0f, pivotRot2);
-        Mul(pivotRot1, transformMatrix, tmp);
-        Mul(pivotRot2, tmp, finalMat);
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, finalMat);
-        glUniform3f(colorLoc, 0.75f, 0.75f, 0.75f);
-        glDrawElements(GL_QUADS, indices_cube.size(), GL_UNSIGNED_INT, 0);
-
-        // Бронзовый кубик справа (меньше)
-        CreateTransformMatrix(0.0f, pedestalAngleCubeY, 0.0f, 0.27f, -0.165f, -0.115f);
-        CreatePivotRotationY(pedestalAngleCenterY, 0.45f, 0.0f, 0.0f, pivotRot1);
-        CreatePivotRotationY(pedestalAngleY, 0.0f, 0.0f, 0.0f, pivotRot2);
-        Mul(pivotRot1, transformMatrix, tmp);
-        Mul(pivotRot2, tmp, finalMat);
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, finalMat);
-        glUniform3f(colorLoc, 0.8f, 0.5f, 0.2f);
-        glDrawElements(GL_QUADS, indices_cube.size(), GL_UNSIGNED_INT, 0);
     }
 }
 
@@ -686,66 +428,12 @@ int main()
                 case sf::Keyboard::Num1:
                     task = 1;
                     break;
-                case sf::Keyboard::Q:
-                    task = 0;
-                    break;
                 case sf::Keyboard::Num2:
                     task = 2;
                     break;
-                case sf::Keyboard::W:
-                    task = 21;
-                    break;
-                case sf::Keyboard::E:
-                    task = 22;
-                    break;
-				case sf::Keyboard::Num3:
+                case sf::Keyboard::Num3:
                     task = 3;
                     break;
-                case sf::Keyboard::Z:
-                    pedestalAngleCenterY += 0.05f;
-                    break; // влево
-                case sf::Keyboard::X:
-                    pedestalAngleCenterY -= 0.05f;
-                    break; // вправо
-                case sf::Keyboard::A:
-                    pedestalAngleY += 0.05f;
-                    break; // влево
-                case sf::Keyboard::S:
-                    pedestalAngleY -= 0.05f;
-                    break; // вправо
-                case sf::Keyboard::C:
-                    pedestalAngleCubeY += 0.05f;
-                    break; // влево
-                case sf::Keyboard::V:
-                    pedestalAngleCubeY -= 0.05f;
-                    break; // вправо
-                }
-
-                sf::Vector2u size = window.getSize();
-                if (task == 3)
-                {
-                    if (size.x != 800 || size.y != 800)
-                    {
-                        window.create(sf::VideoMode(800, 800), "Pedestal", sf::Style::Default, sf::ContextSettings(24));
-                        glewInit();
-                        glEnable(GL_DEPTH_TEST);
-                        InitShaders();
-                        InitBuffers();
-                        pedestalAngleY = 0.0f;
-                        pedestalAngleCubeY = 0.0f;
-                        pedestalAngleCenterY = 0.0f;
-                    }
-                }
-                else
-                {
-                    if (size.x != 1600 || size.y != 800)
-                    {
-                        window.create(sf::VideoMode(1600, 800), "Square right side", sf::Style::Default, sf::ContextSettings(24));
-                        glewInit();
-                        glEnable(GL_DEPTH_TEST);
-                        InitShaders();
-                        InitBuffers();
-                    }
                 }
             }
         }
@@ -757,3 +445,13 @@ int main()
         window.display();
     }
 }
+
+/*
+CreateTransformMatrix(0, 0, 0);
+modelLoc = glGetUniformLocation(Program, "model");
+glUniformMatrix4fv(modelLoc, 1, GL_FALSE, transformMatrix);
+
+glUseProgram(Program);
+glBindVertexArray(VAO_test);
+glDrawElements(GL_POINTS, indices_test.size(), GL_UNSIGNED_INT, 0);
+*/
