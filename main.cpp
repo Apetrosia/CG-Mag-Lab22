@@ -8,21 +8,12 @@
 GLuint Program;
 GLuint ProgramStripes;
 
-GLuint VAO_test, VBO_test, EBO_test;
 GLuint VAO_square, VBO_square, EBO_square;
-GLuint VAO_triangle, VBO_triangle, EBO_triangle;
 GLuint VAO_pentagon, VBO_pentagon, EBO_pentagon;
 GLuint VAO_cube, VBO_cube, EBO_cube;
 
 GLfloat transformMatrix[16];
-GLfloat pivotRot1[16];
-GLfloat pivotRot2[16];
-GLfloat tmp[16];
 GLuint modelLoc;
-
-float pedestalAngleY = 0.0f;
-float pedestalAngleCubeY = 0.0f;
-float pedestalAngleCenterY = 0.0f;
 
 int task;
 
@@ -73,21 +64,8 @@ std::vector<GLint> indices_cube = {
 	1, 5, 7, 3  // верхняя
 };
 
-GLfloat finalMat[16];
-auto Mul = [](GLfloat* a, GLfloat* b, GLfloat* out)
-    {
-        for (int col = 0; col < 4; col++)
-            for (int row = 0; row < 4; row++)
-            {
-                out[col * 4 + row] = 0.0f;
-                for (int k = 0; k < 4; k++)
-                    out[col * 4 + row] +=
-                    a[k * 4 + row] * b[col * 4 + k];
-            }
-    };
-
-void CreateTransformMatrix(float angleX, float angleY, float angleZ,
-    float scale = 1.0f,
+void CreateTransformMatrix(float angleX = 0.0f, float angleY = 0.0f, float angleZ = 0.0f,
+    float scalex = 1.0f, float scaley = 1.0f, float scalez = 1.0f,
     float tx = 0.0f, float ty = 0.0f, float tz = 0.0f)
 {
     GLfloat rx[16] = {
@@ -112,9 +90,9 @@ void CreateTransformMatrix(float angleX, float angleY, float angleZ,
     };
 
     GLfloat s[16] = {
-        scale,0,0,0,
-        0,scale,0,0,
-        0,0,scale,0,
+        scalex,0,0,0,
+        0,scaley,0,0,
+        0,0,scalez,0,
         0,0,0,1
     };
 
@@ -143,45 +121,6 @@ void CreateTransformMatrix(float angleX, float angleY, float angleZ,
     transformMatrix[13] = ty;
     transformMatrix[14] = tz;
     transformMatrix[15] = 1.0f;
-}
-
-void CreatePivotRotationY(float angle, float cx, float cy, float cz, GLfloat* out)
-{
-    GLfloat Tneg[16] = {
-        1,0,0,0,
-        0,1,0,0,
-        0,0,1,0,
-        -cx,-cy,-cz,1
-    };
-
-    GLfloat RY[16] = {
-        cos(angle),0,sin(angle),0,
-        0,1,0,0,
-        -sin(angle),0,cos(angle),0,
-        0,0,0,1
-    };
-
-    GLfloat Tpos[16] = {
-        1,0,0,0,
-        0,1,0,0,
-        0,0,1,0,
-        cx,cy,cz,1
-    };
-
-    auto Mul = [](GLfloat* a, GLfloat* b, GLfloat* out)
-        {
-            for (int i = 0; i < 4; i++)
-                for (int j = 0; j < 4; j++)
-                {
-                    out[i * 4 + j] = 0;
-                    for (int k = 0; k < 4; k++)
-                        out[i * 4 + j] += a[i * 4 + k] * b[k * 4 + j];
-                }
-        };
-
-    GLfloat tmp[16];
-    Mul(RY, Tneg, tmp);     // R * T(-C)
-    Mul(Tpos, tmp, out);    // T(C) * R * T(-C)
 }
 
 const char* VS = R"(
@@ -214,11 +153,12 @@ const char* VS_stripes = R"(
 #version 330 core
 layout(location=0) in vec3 coord;
 
+uniform mat4 model;
 out vec3 vPosition;
 
 void main() {
-    gl_Position = vec4(coord, 1.0); // без матрицы
-    vPosition = coord;              // передаём исходную позицию
+    gl_Position = model * vec4(coord,1.0);
+    vPosition = coord;
 }
 )";
 
@@ -384,7 +324,29 @@ void Draw()
 {
     if (task == 1)
     {
+        // Пятиугольник
+        glUseProgram(Program);
+        CreateTransformMatrix(0, 0, 0, 0.5f, 1, 1, -0.6f);
+        modelLoc = glGetUniformLocation(Program, "model");
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, transformMatrix);
+        glBindVertexArray(VAO_pentagon);
+        glDrawElements(GL_POLYGON, indices_pentagon.size(), GL_UNSIGNED_INT, 0);
 
+        // Охра куб
+        glUseProgram(Program);
+        CreateTransformMatrix(0.5f, 0.5f, 0, 0.35f, 0.7f);
+        modelLoc = glGetUniformLocation(Program, "model");
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, transformMatrix);
+        glBindVertexArray(VAO_cube);
+        glDrawElements(GL_QUADS, indices_cube.size(), GL_UNSIGNED_INT, 0);
+
+        // Полосатый квадрат
+        glUseProgram(ProgramStripes);
+        CreateTransformMatrix(0, 0, 0, 0.45f, 0.9, 1, 0.6f);
+        modelLoc = glGetUniformLocation(ProgramStripes, "model");
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, transformMatrix);
+        glBindVertexArray(VAO_square);
+        glDrawElements(GL_QUADS, indices_square.size(), GL_UNSIGNED_INT, 0);
     }
     else if (task == 2)
     {
